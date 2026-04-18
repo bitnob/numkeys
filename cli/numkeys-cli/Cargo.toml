@@ -1,6 +1,6 @@
 [package]
 name = "numkeys-cli"
-version = "0.1.0"
+version = "1.1.0-rc.1"
 edition = "2021"
 authors = ["NumKeys Protocol Contributors"]
 description = "Command-line interface for NumKeys Protocol"

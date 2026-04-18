@@ -12,7 +12,7 @@ keywords = ["numkeys", "client", "http", "attestation", "issuer"]
 categories = ["api-bindings", "web-programming::http-client", "authentication"]
 
 [dependencies]
-numkeys-types = { version = "0.1.0", path = "../numkeys-types" }
+numkeys-types = { version = "1.1.0-rc.1", path = "../numkeys-types" }
 reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

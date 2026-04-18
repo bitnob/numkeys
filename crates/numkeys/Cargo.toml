@@ -12,7 +12,7 @@ keywords = ["numkeys", "protocol", "attestation", "wallet", "issuer"]
 categories = ["cryptography", "authentication", "api-bindings"]
 
 [dependencies]
-numkeys-types = { version = "0.1.0", path = "../numkeys-types" }
-numkeys-crypto = { version = "0.1.0", path = "../numkeys-crypto" }
-numkeys-core = { version = "0.1.0", path = "../numkeys-core" }
-numkeys-client = { version = "0.1.0", path = "../numkeys-client" }
+numkeys-types = { version = "1.1.0-rc.1", path = "../numkeys-types" }
+numkeys-crypto = { version = "1.1.0-rc.1", path = "../numkeys-crypto" }
+numkeys-core = { version = "1.1.0-rc.1", path = "../numkeys-core" }
+numkeys-client = { version = "1.1.0-rc.1", path = "../numkeys-client" }

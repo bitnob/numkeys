@@ -1,0 +1,287 @@
+//! SHA256 operations and binding signatures for the NumKeys Protocol.
+
+use crate::signing::sign_message;
+use base64::{engine::general_purpose, Engine};
+use numkeys_types::{NumKeysResult, PhoneHash, PhoneNumber};
+use rand::{rngs::OsRng, RngCore};
+use sha2::{Digest, Sha256};
+
+/// Generate a cryptographically secure random salt.
+///
+/// # Security Considerations
+/// - Uses OS random number generator
+/// - Returns 16 bytes of entropy
+pub fn generate_salt() -> Vec<u8> {
+    let mut salt = vec![0u8; 16];
+    OsRng.fill_bytes(&mut salt);
+    salt
+}
+
+/// Hash a phone number with salt using SHA256.
+///
+/// # Security Considerations
+/// - Phone number is normalized before hashing
+/// - Salt prevents rainbow table attacks
+/// - Uses SHA256 for strong collision resistance
+pub fn hash_phone_number(phone: &PhoneNumber, salt: &[u8]) -> PhoneHash {
+    let mut hasher = Sha256::new();
+
+    // Hash salt first, then phone number
+    hasher.update(salt);
+    hasher.update(phone.as_str().as_bytes());
+
+    let result = hasher.finalize();
+    let mut hash_bytes = [0u8; 32];
+    hash_bytes.copy_from_slice(&result);
+
+    PhoneHash::from_bytes(hash_bytes)
+}
+
+/// Hash a phone number according to NumKeys Protocol specification.
+///
+/// # Specification
+/// - Remove '+' prefix from E.164 number
+/// - Hash only the digits
+/// - Return format: "sha256:hexhash"
+pub fn hash_phone_number_spec(phone: &PhoneNumber) -> String {
+    // Normalize: remove '+' prefix
+    let normalized = phone.as_str().trim_start_matches('+');
+
+    // Hash the normalized number
+    let mut hasher = Sha256::new();
+    hasher.update(normalized.as_bytes());
+    let result = hasher.finalize();
+
+    // Format as "sha256:hexhash"
+    format!("sha256:{}", hex::encode(result))
+}
+
+/// Create binding signature according to NumKeys Protocol specification v1.1.
+///
+/// # Specification
+/// Ed25519-Sign(issuer_private_key, utf8("numkeys-binding|iss|sub|phone_hash|user_pubkey|nonce|iat|jti"))
+/// Returns: "sig:base64url"
+pub fn create_binding_signature(
+    iss: &str,                               // Issuer domain
+    sub: &str,                               // Proxy number (JWT sub)
+    phone_hash: &str,                        // The complete "sha256:..." string
+    user_pubkey: &str,                       // Base64url encoded public key
+    nonce: &str,                             // Issuance nonce
+    iat: i64,                                // Issued-at timestamp
+    jti: &str,                               // JWT ID
+    private_key: &numkeys_types::PrivateKey, // Issuer private key
+) -> NumKeysResult<String> {
+    // Construct canonical message according to the protocol standard.
+    let message = format!(
+        "numkeys-binding|{}|{}|{}|{}|{}|{}|{}",
+        iss, sub, phone_hash, user_pubkey, nonce, iat, jti
+    );
+
+    // Sign canonical UTF-8 message bytes directly.
+    let signature = sign_message(private_key, message.as_bytes())?;
+
+    // Format as "sig:base64url"
+    Ok(format!(
+        "sig:{}",
+        general_purpose::URL_SAFE_NO_PAD.encode(signature.as_bytes())
+    ))
+}
+
+/// Verify binding signature according to protocol v1.1.
+///
+/// # Specification
+/// Reconstructs the message, hashes it, and verifies the Ed25519 signature
+pub fn verify_binding_signature(
+    iss: &str,                                // Issuer domain
+    sub: &str,                                // Proxy number (JWT sub)
+    phone_hash: &str,                         // The complete "sha256:..." string
+    user_pubkey: &str,                        // Base64url encoded public key
+    nonce: &str,                              // Issuance nonce
+    iat: i64,                                 // Issued-at timestamp
+    jti: &str,                                // JWT ID
+    binding_proof: &str,                      // "sig:base64url" format
+    issuer_pubkey: &numkeys_types::PublicKey, // Issuer public key
+) -> bool {
+    // Check format
+    if !binding_proof.starts_with("sig:") {
+        return false;
+    }
+
+    // Extract signature
+    let sig_base64 = &binding_proof[4..];
+    let sig_bytes = match general_purpose::URL_SAFE_NO_PAD.decode(sig_base64) {
+        Ok(bytes) => bytes,
+        Err(_) => return false,
+    };
+
+    if sig_bytes.len() != 64 {
+        return false;
+    }
+
+    let mut signature_array = [0u8; 64];
+    signature_array.copy_from_slice(&sig_bytes);
+    let signature = numkeys_types::Signature::from_bytes(signature_array);
+
+    // Reconstruct canonical message.
+    let message = format!(
+        "numkeys-binding|{}|{}|{}|{}|{}|{}|{}",
+        iss, sub, phone_hash, user_pubkey, nonce, iat, jti
+    );
+
+    // Verify signature against canonical UTF-8 message bytes.
+    crate::signing::verify_signature(issuer_pubkey, message.as_bytes(), &signature)
+}
+
+/// Compute SHA256 hash of data.
+pub fn sha256(data: &[u8]) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    let result = hasher.finalize();
+
+    let mut hash = [0u8; 32];
+    hash.copy_from_slice(&result);
+    hash
+}
+
+/// Constant-time comparison to prevent timing attacks.
+///
+/// # Security Considerations
+/// - Always processes all bytes regardless of early mismatches
+/// - Uses bitwise operations to avoid branching
+pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+
+    let mut result = 0u8;
+    for (x, y) in a.iter().zip(b.iter()) {
+        result |= x ^ y;
+    }
+
+    result == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use numkeys_types::PhoneNumber;
+
+    #[test]
+    fn test_phone_hashing() {
+        let phone = PhoneNumber::new("+1234567890").unwrap();
+        let salt = b"test-salt";
+
+        let hash1 = hash_phone_number(&phone, salt);
+        let hash2 = hash_phone_number(&phone, salt);
+        assert_eq!(hash1, hash2); // Should be deterministic
+
+        let different_salt = b"different-salt";
+        let hash3 = hash_phone_number(&phone, different_salt);
+        assert_ne!(hash1, hash3); // Different salt should give different hash
+    }
+
+    #[test]
+    fn test_phone_hashing_spec() {
+        let phone = PhoneNumber::new("+1234567890").unwrap();
+        let hash = hash_phone_number_spec(&phone);
+
+        // Should start with "sha256:"
+        assert!(hash.starts_with("sha256:"));
+
+        // Should be 71 chars total (7 for prefix + 64 for hex)
+        assert_eq!(hash.len(), 71);
+
+        // Test known value
+        assert_eq!(
+            hash,
+            "sha256:c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646"
+        );
+    }
+
+    #[test]
+    fn test_binding_signature() {
+        use crate::signing::generate_keypair;
+
+        let issuer_key = generate_keypair().unwrap();
+        let iss = "issuer.example.com";
+        let sub = "+23400123456789";
+        let phone_hash = "sha256:c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646";
+        let user_pubkey = "MCowBQYDK2VwAyEAa7bsa2eI7T6w9P6KVJdLvmSGq2uPmTqz2R0RBAl6R2E";
+        let nonce = "a1b2c3d4e5f67890a1b2c3d4e5f67890";
+        let iat = 1720000000i64;
+        let jti = "550e8400-e29b-41d4-a716-446655440000";
+
+        // Create signature
+        let sig = create_binding_signature(
+            iss,
+            sub,
+            phone_hash,
+            user_pubkey,
+            nonce,
+            iat,
+            jti,
+            &issuer_key.private,
+        )
+        .unwrap();
+
+        // Should have correct format
+        assert!(sig.starts_with("sig:"));
+
+        // Verify signature
+        assert!(verify_binding_signature(
+            iss,
+            sub,
+            phone_hash,
+            user_pubkey,
+            nonce,
+            iat,
+            jti,
+            &sig,
+            &issuer_key.public,
+        ));
+
+        // Wrong public key should fail
+        let other_key = generate_keypair().unwrap();
+        assert!(!verify_binding_signature(
+            iss,
+            sub,
+            phone_hash,
+            user_pubkey,
+            nonce,
+            iat,
+            jti,
+            &sig,
+            &other_key.public,
+        ));
+    }
+
+    #[test]
+    fn test_constant_time_compare() {
+        let a = b"hello world";
+        let b = b"hello world";
+        let c = b"hello worle";
+        let d = b"hello";
+
+        assert!(constant_time_compare(a, b));
+        assert!(!constant_time_compare(a, c));
+        assert!(!constant_time_compare(a, d));
+    }
+
+    #[test]
+    fn test_sha256() {
+        let data = b"test data";
+        let hash1 = sha256(data);
+        let hash2 = sha256(data);
+
+        // Should be deterministic
+        assert_eq!(hash1, hash2);
+
+        // Should be 32 bytes
+        assert_eq!(hash1.len(), 32);
+
+        // Different data should give different hash
+        let different_data = b"different data";
+        let hash3 = sha256(different_data);
+        assert_ne!(hash1, hash3);
+    }
+}

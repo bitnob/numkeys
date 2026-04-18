@@ -1,0 +1,29 @@
+[package]
+name = "numkeys-node"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "HTTP/RPC verification node for NumKeys Protocol"
+
+[[bin]]
+name = "numkeys-node"
+path = "src/main.rs"
+
+[dependencies]
+numkeys-types = { path = "../../crates/numkeys-types" }
+numkeys-crypto = { path = "../../crates/numkeys-crypto" }
+numkeys-core = { path = "../../crates/numkeys-core" }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { workspace = true }
+anyhow = { workspace = true }

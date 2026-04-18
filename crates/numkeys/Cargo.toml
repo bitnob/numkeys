@@ -1,0 +1,18 @@
+[package]
+name = "numkeys"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Unified SDK crate for building with the NumKeys Protocol"
+readme = "../../README.md"
+keywords = ["numkeys", "protocol", "attestation", "wallet", "issuer"]
+categories = ["cryptography", "authentication", "api-bindings"]
+
+[dependencies]
+numkeys-types = { version = "0.1.0", path = "../numkeys-types" }
+numkeys-crypto = { version = "0.1.0", path = "../numkeys-crypto" }
+numkeys-core = { version = "0.1.0", path = "../numkeys-core" }
+numkeys-client = { version = "0.1.0", path = "../numkeys-client" }

@@ -1,0 +1,46 @@
+{
+  "protocol_version": "1.1",
+  "attestation": {
+    "claims": {
+      "binding_proof": "sig:uqOrruP8TsA9FaGxRp2Z5q7UlmgEA3dINaD7puQSV6VOJB9TkIlih5EYqZzSlsaYYoAApeBNqzGNOAKQ8r1dCw",
+      "iat": 1738368000,
+      "iss": "issuer.example.com",
+      "jti": "11111111-1111-4111-8111-111111111111",
+      "nonce": "0123456789abcdef0123456789abcdef",
+      "phone_hash": "sha256:c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+      "sub": "+1002002040155",
+      "user_pubkey": "_RckOFqgx1tk-3jNYC-h2ZH96_drE8WO1wLqyDXp9hg"
+    },
+    "expired_jwt": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIrMTAwMjAwMjA0MDE1NSIsInBob25lX2hhc2giOiJzaGEyNTY6Yzc3NWU3Yjc1N2VkZTYzMGNkMGFhMTExM2JkMTAyNjYxYWIzODgyOWNhNTJhNjQyMmFiNzgyODYyZjI2ODY0NiIsInVzZXJfcHVia2V5IjoiX1Jja09GcWd4MXRrLTNqTllDLWgyWkg5Nl9kckU4V08xd0xxeURYcDloZyIsImlzcyI6Imlzc3Vlci5leGFtcGxlLmNvbSIsImV4cCI6MTcwNjc0NTYwMCwiaWF0IjoxNzA0MDY3MjAwLCJqdGkiOiIyMjIyMjIyMi0yMjIyLTQyMjItODIyMi0yMjIyMjIyMjIyMjIiLCJiaW5kaW5nX3Byb29mIjoic2lnOnVxT3JydVA4VHNBOUZhR3hScDJaNXE3VWxtZ0VBM2RJTmFEN3B1UVNWNlZPSkI5VGtJbGloNUVZcVp6U2xzYVlZb0FBcGVCTnF6R05PQUtROHIxZEN3Iiwibm9uY2UiOiIwMTIzNDU2Nzg5YWJjZGVmMDEyMzQ1Njc4OWFiY2RlZiJ9.JfKLbejBLC6MQIXXmOP-wmXNDSlUhoLQGtZLfT0blOfc-Gcsw7sV-ewPkEQ__Nd4oDaHkLAHCVY1VIUU5zRZDw",
+    "generation_nonce": "0123456789abcdef0123456789abcdef",
+    "issuer_private_key": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+    "issuer_public_key": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw",
+    "phone_number": "+1234567890",
+    "proxy_number": "+1002002040155",
+    "scope": "1",
+    "tampered_signature_jwt": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIrMTAwMjAwMjA0MDE1NSIsInBob25lX2hhc2giOiJzaGEyNTY6Yzc3NWU3Yjc1N2VkZTYzMGNkMGFhMTExM2JkMTAyNjYxYWIzODgyOWNhNTJhNjQyMmFiNzgyODYyZjI2ODY0NiIsInVzZXJfcHVia2V5IjoiX1Jja09GcWd4MXRrLTNqTllDLWgyWkg5Nl9kckU4V08xd0xxeURYcDloZyIsImlzcyI6Imlzc3Vlci5leGFtcGxlLmNvbSIsImlhdCI6MTczODM2ODAwMCwianRpIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiYmluZGluZ19wcm9vZiI6InNpZzp1cU9ycnVQOFRzQTlGYUd4UnAyWjVxN1VsbWdFQTNkSU5hRDdwdVFTVjZWT0pCOVRrSWxpaDVFWXFaelNsc2FZWW9BQXBlQk5xekdOT0FLUThyMWRDdyIsIm5vbmNlIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYifQ.6dJaDNWKjFUHi7_8-0ySHWBODI9wqWslpXU3vvMWXzhNlCWw9DDKER3s9_Of9neTN5vAhiH2zhSxi70fCXfbAA",
+    "user_private_key": "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk",
+    "user_public_key": "_RckOFqgx1tk-3jNYC-h2ZH96_drE8WO1wLqyDXp9hg",
+    "valid_jwt": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIrMTAwMjAwMjA0MDE1NSIsInBob25lX2hhc2giOiJzaGEyNTY6Yzc3NWU3Yjc1N2VkZTYzMGNkMGFhMTExM2JkMTAyNjYxYWIzODgyOWNhNTJhNjQyMmFiNzgyODYyZjI2ODY0NiIsInVzZXJfcHVia2V5IjoiX1Jja09GcWd4MXRrLTNqTllDLWgyWkg5Nl9kckU4V08xd0xxeURYcDloZyIsImlzcyI6Imlzc3Vlci5leGFtcGxlLmNvbSIsImlhdCI6MTczODM2ODAwMCwianRpIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiYmluZGluZ19wcm9vZiI6InNpZzp1cU9ycnVQOFRzQTlGYUd4UnAyWjVxN1VsbWdFQTNkSU5hRDdwdVFTVjZWT0pCOVRrSWxpaDVFWXFaelNsc2FZWW9BQXBlQk5xekdOT0FLUThyMWRDdyIsIm5vbmNlIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYifQ.6dJaDNWKjFUHi7_8-0ySHWBODI9wqWslpXU3vvMWXzhNlCWw9DDKER3s9_Of9neTN5vAhiH2zhSxi70fCXfbAw",
+    "wrong_issuer_public_key": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo"
+  },
+  "challenge_response": {
+    "challenge": {
+      "callback_url": "https://chat.example.com/numkeys/callback",
+      "challenge_nonce": "challenge-nonce-001",
+      "expires_at": 1738454800000,
+      "proxy_number": "+1002002040155",
+      "service_id": "chat.example.com",
+      "verification_id": "verify-123"
+    },
+    "payload": {
+      "challenge_nonce": "challenge-nonce-001",
+      "response_nonce": "response-nonce-001",
+      "service_id": "chat.example.com",
+      "timestamp": 1738454200000,
+      "verification_id": "verify-123"
+    },
+    "tampered_user_signature": "N9123o3w1dIkQxRa4wkl23F9fvdQjaPaeAKVCesDi4SyQftlDVTLli_6qfoSecMSZiH4C5jWgowJuF5FX3CkCB",
+    "user_signature": "N9123o3w1dIkQxRa4wkl23F9fvdQjaPaeAKVCesDi4SyQftlDVTLli_6qfoSecMSZiH4C5jWgowJuF5FX3CkCA"
+  }
+}

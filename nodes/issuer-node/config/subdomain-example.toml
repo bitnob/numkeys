@@ -1,0 +1,12 @@
+# Example configuration for an issuer running on a subdomain
+# In the core protocol, the issuer signs as the exact domain that serves its key.
+
+# The address where the issuer service binds
+bind_address = "0.0.0.0:3000"
+
+# The issuer domain where the service is running and the public key is served
+domain = "api.example.com"
+
+# Private key path (generate with numkeys-cli or similar)
+# In production, use environment variables or secure key management
+# private_key_path = "/path/to/private.key"

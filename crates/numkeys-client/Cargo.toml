@@ -1,0 +1,24 @@
+[package]
+name = "numkeys-client"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "HTTP client for the NumKeys Protocol"
+readme = "../../README.md"
+keywords = ["numkeys", "client", "http", "attestation", "issuer"]
+categories = ["api-bindings", "web-programming::http-client", "authentication"]
+
+[dependencies]
+numkeys-types = { version = "0.1.0", path = "../numkeys-types" }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+wiremock = "0.5"

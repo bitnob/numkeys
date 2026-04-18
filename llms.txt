@@ -1,0 +1,49 @@
+# NumKeys LLM Integration Guide
+
+Primary source of truth for integration:
+- docs/rpc-api-contract.md
+
+Supporting references:
+- docs/rpc-client-examples.md
+- docs/numkeys-protocol-specification.md
+- docs/v1-test-vectors.md
+- nodes/numkeys-node/README.md
+- scripts/smoke-numkeys-node.sh
+
+Integration target:
+- Use `numkeys-node` HTTP endpoints for language-agnostic backend integration.
+
+Stable routes (v1.1):
+- GET /health
+- GET /status
+- GET /.well-known/numkeys/pubkey.json
+- POST /create-challenge
+- POST /issue-attestation
+- POST /verify-attestation
+- POST /verify-challenge-response
+
+Canonical backend flow:
+1) Mint attestation:
+   POST /issue-attestation
+2) Create verification challenge:
+   POST /create-challenge
+3) Wallet signs challenge payload and returns response
+4) Verify challenge response:
+   POST /verify-challenge-response
+5) Optional attestation-only validation:
+   POST /verify-attestation
+
+Validation expectations:
+- Use `iat` + policy (`max_attestation_age_seconds`) for freshness.
+- Do not require `exp` for core validation.
+- Enforce replay protection in verification flows (`jti`, `challenge_nonce`, `response_nonce`).
+- Respect canonical binding semantics from protocol docs.
+
+Error contract:
+- API errors return:
+  {"error":"error_code","error_description":"..."}
+
+Implementation notes for LLM agents:
+- Prefer the RPC contract doc over inferred behavior.
+- Do not invent alternate endpoint names.
+- Use HTTPS in production deployments.

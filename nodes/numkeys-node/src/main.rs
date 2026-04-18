@@ -15,16 +15,16 @@ use numkeys_crypto::{
     generate_hex_nonce, generate_keypair, keypair_from_private, verify_challenge_response,
 };
 use numkeys_types::{
-    Challenge, ChallengeResponse, IssuerInfo, KeyPair, Nonce, PhoneNumber, ProxyNumber,
-    PublicKey, VerifiedAttestation,
+    Challenge, ChallengeResponse, IssuerInfo, KeyPair, Nonce, PhoneNumber, ProxyNumber, PublicKey,
+    VerifiedAttestation,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
     collections::HashSet,
     fs,
-    path::{Path, PathBuf},
     net::SocketAddr,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 use tower_http::trace::TraceLayer;
@@ -777,7 +777,10 @@ mod tests {
         assert_eq!(issue_res.status(), StatusCode::OK);
         let issue_json = response_json(issue_res).await;
         let attestation = issue_json["attestation"].as_str().unwrap().to_string();
-        let issuer_public_key = issue_json["issuer_public_key"].as_str().unwrap().to_string();
+        let issuer_public_key = issue_json["issuer_public_key"]
+            .as_str()
+            .unwrap()
+            .to_string();
         let proxy_number = issue_json["proxy_number"].as_str().unwrap().to_string();
 
         let challenge_payload = json!({

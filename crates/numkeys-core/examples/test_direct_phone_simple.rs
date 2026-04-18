@@ -26,7 +26,10 @@ fn main() {
     let service_hash = hash_phone_number_spec(&service_phone);
 
     println!("\nService computes:");
-    println!("  Normalized: {}", service_phone.as_str().trim_start_matches('+'));
+    println!(
+        "  Normalized: {}",
+        service_phone.as_str().trim_start_matches('+')
+    );
     println!("  Hash: {}", service_hash);
 
     // Step 4: Compare

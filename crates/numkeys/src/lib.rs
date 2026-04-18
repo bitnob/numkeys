@@ -16,7 +16,9 @@ pub use numkeys_crypto as crypto;
 pub use numkeys_types as types;
 
 // Convenience re-exports for common integration paths.
-pub use numkeys_client::{AttestationRequest, AttestationResponse, IssuerClient, NumkeysNodeClient};
+pub use numkeys_client::{
+    AttestationRequest, AttestationResponse, IssuerClient, NumkeysNodeClient,
+};
 pub use numkeys_core::{
     create_attestation, discover_issuer_key, generate_proxy_number, parse_attestation,
     parse_attestation_jwt, validate_attestation, verify_attestation, verify_attestation_with_key,

@@ -1,6 +1,8 @@
 //! Test direct phone number verification without proxy numbers
 
-use numkeys_core::{attestation::AttestationBuilder, generate_proxy_number, parse_attestation, ProxyGenerationInput};
+use numkeys_core::{
+    attestation::AttestationBuilder, generate_proxy_number, parse_attestation, ProxyGenerationInput,
+};
 use numkeys_crypto::{generate_hex_nonce, generate_keypair, hash_phone_number_spec};
 use numkeys_types::PhoneNumber;
 
@@ -60,7 +62,9 @@ fn main() -> anyhow::Result<()> {
         println!("  Attestation JWT: [provided by user]");
 
         // Service normalizes the phone (same as protocol does)
-        let normalized = phone.as_str().chars()
+        let normalized = phone
+            .as_str()
+            .chars()
             .filter(|c| c.is_numeric())
             .collect::<String>();
         println!("\nService normalizes phone:");
@@ -79,7 +83,10 @@ fn main() -> anyhow::Result<()> {
         // Compare hashes
         println!("\nVerification result:");
         if computed_hash.to_string() == parsed.phone_hash.to_string() {
-            println!("  ✅ SUCCESS: Phone {} verified via direct hash!", phone_str);
+            println!(
+                "  ✅ SUCCESS: Phone {} verified via direct hash!",
+                phone_str
+            );
         } else {
             println!("  ❌ FAILED: Hash mismatch!");
             println!("  Expected: {}", parsed.phone_hash);
@@ -122,7 +129,9 @@ fn main() -> anyhow::Result<()> {
 
     // Try to verify with wrong phone
     let wrong_phone = PhoneNumber::new(wrong_phone_str)?;
-    let normalized_wrong = wrong_phone.as_str().chars()
+    let normalized_wrong = wrong_phone
+        .as_str()
+        .chars()
         .filter(|c| c.is_numeric())
         .collect::<String>();
 

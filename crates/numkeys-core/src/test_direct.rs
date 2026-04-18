@@ -65,7 +65,9 @@ fn test_direct_phone_verification_actually_works() {
     // Service would compute the same hash
     let service_phone = PhoneNumber::new(phone_str).unwrap();
     let service_hash = hash_phone_number_spec(&service_phone);
-    let service_hex = service_hash.strip_prefix("sha256:").unwrap_or(&service_hash);
+    let service_hex = service_hash
+        .strip_prefix("sha256:")
+        .unwrap_or(&service_hash);
 
     println!("Service computes: {}", service_hex);
 
@@ -82,8 +84,10 @@ fn test_direct_phone_verification_actually_works() {
             // but let's check what's actually happening
             panic!("Salt-based hashing detected - need different computation!");
         } else {
-            panic!("\n❌ HASHES DON'T MATCH!\nExpected: {}\nGot: {}",
-                   attestation_hash_str, service_hex);
+            panic!(
+                "\n❌ HASHES DON'T MATCH!\nExpected: {}\nGot: {}",
+                attestation_hash_str, service_hex
+            );
         }
     }
 
@@ -96,8 +100,10 @@ fn test_direct_phone_verification_actually_works() {
     println!("Wrong phone hash: {}", wrong_hex);
     println!("Correct hash: {}", attestation_hash_str);
 
-    assert_ne!(wrong_hex, attestation_hash_str,
-               "Wrong phone should produce different hash!");
+    assert_ne!(
+        wrong_hex, attestation_hash_str,
+        "Wrong phone should produce different hash!"
+    );
 
     println!("\n✅ ALL TESTS PASSED!");
     println!("NumKeys supports direct phone verification!");

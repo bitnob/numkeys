@@ -228,14 +228,8 @@ async fn main() -> anyhow::Result<()> {
             key,
             output,
         } => {
-            commands::attest::execute(
-                &issuer,
-                &phone,
-                &scope,
-                key.as_deref(),
-                output.as_deref(),
-            )
-            .await?;
+            commands::attest::execute(&issuer, &phone, &scope, key.as_deref(), output.as_deref())
+                .await?;
         }
         Commands::Verify { attestation, phone } => {
             commands::verify::execute(&attestation, phone.as_deref()).await?;

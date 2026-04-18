@@ -43,8 +43,8 @@ impl NumkeysNodeClient {
             && !base_url.host_str().unwrap_or("").starts_with("localhost")
         {
             return Err(ClientError::InvalidUrl(
-                    "Node URL must use HTTPS".to_string(),
-                ));
+                "Node URL must use HTTPS".to_string(),
+            ));
         }
 
         let client = build_http_client()?;

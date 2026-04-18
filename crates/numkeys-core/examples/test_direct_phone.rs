@@ -1,5 +1,7 @@
 //! Test direct phone number verification without proxy numbers
 
+#![allow(clippy::uninlined_format_args)]
+
 use numkeys_core::{
     attestation::AttestationBuilder, generate_proxy_number, parse_attestation, ProxyGenerationInput,
 };
@@ -82,7 +84,8 @@ fn main() -> anyhow::Result<()> {
 
         // Compare hashes
         println!("\nVerification result:");
-        if computed_hash.to_string() == parsed.phone_hash.to_string() {
+        let attestation_hash = format!("sha256:{}", parsed.phone_hash.to_hex());
+        if computed_hash == attestation_hash {
             println!(
                 "  ✅ SUCCESS: Phone {} verified via direct hash!",
                 phone_str
@@ -138,10 +141,11 @@ fn main() -> anyhow::Result<()> {
     let normalized_wrong_phone = PhoneNumber::new(format!("+{}", normalized_wrong))?;
     let wrong_hash = hash_phone_number_spec(&normalized_wrong_phone);
 
-    println!("\nCorrect phone hash: {}", parsed.phone_hash);
+    let attestation_hash = format!("sha256:{}", parsed.phone_hash.to_hex());
+    println!("\nCorrect phone hash: {}", attestation_hash);
     println!("Wrong phone hash: {}", wrong_hash);
 
-    if wrong_hash.to_string() != parsed.phone_hash.to_string() {
+    if wrong_hash != attestation_hash {
         println!("\n✅ GOOD: Wrong phone correctly rejected!");
     } else {
         println!("\n❌ BAD: Wrong phone incorrectly accepted!");

@@ -5,6 +5,7 @@ use crate::attestation::jwt::decode_jwt;
 use crate::attestation::parse::{parse_attestation, validate_attestation};
 use crate::verification::discovery::discover_issuer_key;
 use chrono::Utc;
+use numkeys_crypto::BindingMessage;
 use numkeys_types::{NumKeysResult, PublicKey, VerifiedAttestation};
 
 /// Verify an attestation by discovering the issuer's public key.
@@ -39,14 +40,19 @@ pub fn verify_attestation_with_key(
 
     // Verify binding signature with issuer's public key
     // The binding proof is stored in claims as the full "sig:..." string.
+    let phone_hash = format!("sha256:{}", attestation.phone_hash.to_hex());
+    let user_pubkey = attestation.user_pubkey.to_base64();
+    let binding_message = BindingMessage {
+        iss: &attestation.iss,
+        sub: attestation.proxy_number.as_str(),
+        phone_hash: &phone_hash,
+        user_pubkey: &user_pubkey,
+        nonce: attestation.nonce.as_str(),
+        iat: attestation.iat.timestamp(),
+        jti: &attestation.jti,
+    };
     let binding_valid = numkeys_crypto::verify_binding_signature(
-        &attestation.iss,
-        attestation.proxy_number.as_str(),
-        &format!("sha256:{}", attestation.phone_hash.to_hex()),
-        &attestation.user_pubkey.to_base64(),
-        attestation.nonce.as_str(),
-        attestation.iat.timestamp(),
-        &attestation.jti,
+        &binding_message,
         &claims.binding_proof, // This already contains "sig:..."
         issuer_key,
     );

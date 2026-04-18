@@ -45,7 +45,7 @@ pub fn generate_timestamped_nonce() -> NumKeysResult<Nonce> {
     OsRng.fill_bytes(&mut random_bytes);
 
     let random_b64 = general_purpose::URL_SAFE_NO_PAD.encode(random_bytes);
-    let nonce_value = format!("{}_{}", timestamp, random_b64);
+    let nonce_value = format!("{timestamp}_{random_b64}");
 
     Ok(Nonce::new(nonce_value))
 }
@@ -185,7 +185,7 @@ mod tests {
             - 7200; // 2 hours ago
 
         let random_b64 = general_purpose::URL_SAFE_NO_PAD.encode([42u8; 24]);
-        let old_nonce = Nonce::new(format!("{}_{}", old_timestamp, random_b64));
+        let old_nonce = Nonce::new(format!("{old_timestamp}_{random_b64}"));
 
         // Should be invalid with 1 hour window
         assert!(validate_timestamped_nonce(&old_nonce, 3600).is_err());
@@ -198,7 +198,7 @@ mod tests {
             .unwrap()
             .as_secs();
 
-        let nonce = Nonce::new(format!("{}_abc_def_ghi", current_timestamp));
+        let nonce = Nonce::new(format!("{current_timestamp}_abc_def_ghi"));
 
         assert!(validate_timestamped_nonce(&nonce, 3600).is_ok());
     }
@@ -242,7 +242,7 @@ mod tests {
             + 1000; // 1000 seconds in the future
 
         let random_b64 = general_purpose::URL_SAFE_NO_PAD.encode([42u8; 24]);
-        let future_nonce = Nonce::new(format!("{}_{}", future_timestamp, random_b64));
+        let future_nonce = Nonce::new(format!("{future_timestamp}_{random_b64}"));
 
         // Should be rejected
         assert!(validate_timestamped_nonce(&future_nonce, 3600).is_err());

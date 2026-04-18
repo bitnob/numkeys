@@ -18,6 +18,7 @@
 
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
+#![allow(clippy::uninlined_format_args)]
 
 pub mod hashing;
 pub mod nonce;
@@ -26,7 +27,7 @@ pub mod signing;
 // Re-export commonly used functions
 pub use hashing::{
     constant_time_compare, create_binding_signature, generate_salt, hash_phone_number,
-    hash_phone_number_spec, sha256, verify_binding_signature,
+    hash_phone_number_spec, sha256, verify_binding_signature, BindingMessage,
 };
 pub use nonce::{
     generate_hex_nonce, generate_nonce, generate_timestamped_nonce, validate_timestamped_nonce,

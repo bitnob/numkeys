@@ -45,8 +45,7 @@ impl PhoneNumber {
         let digit_count = digits.len();
         if !(7..=15).contains(&digit_count) {
             return Err(NumKeysError::InvalidPhoneNumber(format!(
-                "Phone number must have 7-15 digits, found {}",
-                digit_count
+                "Phone number must have 7-15 digits, found {digit_count}",
             )));
         }
 
@@ -160,7 +159,7 @@ impl ProxyNumber {
 
     /// Create a local proxy number.
     pub fn new_local(country_code: &str, number_part: &str) -> NumKeysResult<Self> {
-        let full = format!("+{}00{}", country_code, number_part);
+        let full = format!("+{country_code}00{number_part}");
         Self::new(full)
     }
 

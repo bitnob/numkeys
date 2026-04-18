@@ -1,8 +1,12 @@
+#![allow(clippy::uninlined_format_args)]
+
 use chrono::{TimeZone, Utc};
 use numkeys_core::attestation::claims::Claims;
 use numkeys_core::attestation::jwt::encode_jwt;
 use numkeys_core::{generate_proxy_number, ProxyGenerationInput};
-use numkeys_crypto::{create_binding_signature, keypair_from_private, sign_challenge_response};
+use numkeys_crypto::{
+    create_binding_signature, keypair_from_private, sign_challenge_response, BindingMessage,
+};
 use numkeys_types::{
     Attestation, BindingProof, Challenge, ChallengeResponsePayload, Nonce, PhoneHash, PrivateKey,
 };
@@ -42,16 +46,17 @@ fn main() -> anyhow::Result<()> {
     let jti = "11111111-1111-4111-8111-111111111111".to_string();
     let phone_hash =
         numkeys_crypto::hash_phone_number_spec(&numkeys_types::PhoneNumber::new(phone_number)?);
-    let binding_proof = create_binding_signature(
-        issuer,
-        proxy_number.as_str(),
-        &phone_hash,
-        &user_keypair.public.to_base64(),
-        generation_nonce,
-        iat.timestamp(),
-        &jti,
-        &issuer_private,
-    )?;
+    let user_pubkey_b64 = user_keypair.public.to_base64();
+    let binding_message = BindingMessage {
+        iss: issuer,
+        sub: proxy_number.as_str(),
+        phone_hash: &phone_hash,
+        user_pubkey: &user_pubkey_b64,
+        nonce: generation_nonce,
+        iat: iat.timestamp(),
+        jti: &jti,
+    };
+    let binding_proof = create_binding_signature(&binding_message, &issuer_private)?;
     let binding_bytes = BindingProof::from_base64(binding_proof.trim_start_matches("sig:"))?;
 
     let attestation = Attestation {

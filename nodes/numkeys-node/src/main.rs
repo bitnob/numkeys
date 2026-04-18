@@ -1,5 +1,7 @@
 //! NumKeys HTTP/RPC node for issuing and verifying protocol artifacts.
 
+#![allow(clippy::uninlined_format_args)]
+
 use axum::{
     extract::State,
     http::StatusCode,

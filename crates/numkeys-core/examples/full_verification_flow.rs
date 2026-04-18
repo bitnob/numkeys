@@ -1,5 +1,7 @@
 //! Full end-to-end verification flow demonstration.
 
+#![allow(clippy::uninlined_format_args)]
+
 use numkeys_core::{
     attestation::AttestationBuilder, generate_proxy_number, parse_attestation,
     verify_attestation_with_key, ProxyGenerationInput,

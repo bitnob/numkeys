@@ -6,6 +6,35 @@ use numkeys_types::{NumKeysResult, PhoneHash, PhoneNumber};
 use rand::{rngs::OsRng, RngCore};
 use sha2::{Digest, Sha256};
 
+/// Canonical binding payload used for binding-proof signing and verification.
+#[derive(Debug, Clone, Copy)]
+pub struct BindingMessage<'a> {
+    /// Issuer domain (`iss`).
+    pub iss: &'a str,
+    /// Proxy number (`sub`).
+    pub sub: &'a str,
+    /// Complete phone hash string in `sha256:<hex>` form.
+    pub phone_hash: &'a str,
+    /// Base64url-encoded user public key.
+    pub user_pubkey: &'a str,
+    /// Issuance nonce.
+    pub nonce: &'a str,
+    /// Issued-at timestamp (seconds).
+    pub iat: i64,
+    /// JWT ID.
+    pub jti: &'a str,
+}
+
+impl<'a> BindingMessage<'a> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        format!(
+            "numkeys-binding|{}|{}|{}|{}|{}|{}|{}",
+            self.iss, self.sub, self.phone_hash, self.user_pubkey, self.nonce, self.iat, self.jti
+        )
+        .into_bytes()
+    }
+}
+
 /// Generate a cryptographically secure random salt.
 ///
 /// # Security Considerations
@@ -62,23 +91,12 @@ pub fn hash_phone_number_spec(phone: &PhoneNumber) -> String {
 /// Ed25519-Sign(issuer_private_key, utf8("numkeys-binding|iss|sub|phone_hash|user_pubkey|nonce|iat|jti"))
 /// Returns: "sig:base64url"
 pub fn create_binding_signature(
-    iss: &str,                               // Issuer domain
-    sub: &str,                               // Proxy number (JWT sub)
-    phone_hash: &str,                        // The complete "sha256:..." string
-    user_pubkey: &str,                       // Base64url encoded public key
-    nonce: &str,                             // Issuance nonce
-    iat: i64,                                // Issued-at timestamp
-    jti: &str,                               // JWT ID
+    message: &BindingMessage<'_>,
     private_key: &numkeys_types::PrivateKey, // Issuer private key
 ) -> NumKeysResult<String> {
-    // Construct canonical message according to the protocol standard.
-    let message = format!(
-        "numkeys-binding|{}|{}|{}|{}|{}|{}|{}",
-        iss, sub, phone_hash, user_pubkey, nonce, iat, jti
-    );
-
     // Sign canonical UTF-8 message bytes directly.
-    let signature = sign_message(private_key, message.as_bytes())?;
+    let canonical = message.canonical_bytes();
+    let signature = sign_message(private_key, &canonical)?;
 
     // Format as "sig:base64url"
     Ok(format!(
@@ -92,13 +110,7 @@ pub fn create_binding_signature(
 /// # Specification
 /// Reconstructs the message, hashes it, and verifies the Ed25519 signature
 pub fn verify_binding_signature(
-    iss: &str,                                // Issuer domain
-    sub: &str,                                // Proxy number (JWT sub)
-    phone_hash: &str,                         // The complete "sha256:..." string
-    user_pubkey: &str,                        // Base64url encoded public key
-    nonce: &str,                              // Issuance nonce
-    iat: i64,                                 // Issued-at timestamp
-    jti: &str,                                // JWT ID
+    message: &BindingMessage<'_>,
     binding_proof: &str,                      // "sig:base64url" format
     issuer_pubkey: &numkeys_types::PublicKey, // Issuer public key
 ) -> bool {
@@ -122,14 +134,9 @@ pub fn verify_binding_signature(
     signature_array.copy_from_slice(&sig_bytes);
     let signature = numkeys_types::Signature::from_bytes(signature_array);
 
-    // Reconstruct canonical message.
-    let message = format!(
-        "numkeys-binding|{}|{}|{}|{}|{}|{}|{}",
-        iss, sub, phone_hash, user_pubkey, nonce, iat, jti
-    );
-
     // Verify signature against canonical UTF-8 message bytes.
-    crate::signing::verify_signature(issuer_pubkey, message.as_bytes(), &signature)
+    let canonical = message.canonical_bytes();
+    crate::signing::verify_signature(issuer_pubkey, &canonical, &signature)
 }
 
 /// Compute SHA256 hash of data.
@@ -212,7 +219,7 @@ mod tests {
         let jti = "550e8400-e29b-41d4-a716-446655440000";
 
         // Create signature
-        let sig = create_binding_signature(
+        let message = BindingMessage {
             iss,
             sub,
             phone_hash,
@@ -220,39 +227,18 @@ mod tests {
             nonce,
             iat,
             jti,
-            &issuer_key.private,
-        )
-        .unwrap();
+        };
+        let sig = create_binding_signature(&message, &issuer_key.private).unwrap();
 
         // Should have correct format
         assert!(sig.starts_with("sig:"));
 
         // Verify signature
-        assert!(verify_binding_signature(
-            iss,
-            sub,
-            phone_hash,
-            user_pubkey,
-            nonce,
-            iat,
-            jti,
-            &sig,
-            &issuer_key.public,
-        ));
+        assert!(verify_binding_signature(&message, &sig, &issuer_key.public,));
 
         // Wrong public key should fail
         let other_key = generate_keypair().unwrap();
-        assert!(!verify_binding_signature(
-            iss,
-            sub,
-            phone_hash,
-            user_pubkey,
-            nonce,
-            iat,
-            jti,
-            &sig,
-            &other_key.public,
-        ));
+        assert!(!verify_binding_signature(&message, &sig, &other_key.public));
     }
 
     #[test]

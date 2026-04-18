@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn test_private_key_no_display() {
         let key = PrivateKey::from_bytes([0u8; 32]);
-        let debug = format!("{:?}", key);
+        let debug = format!("{key:?}");
         assert!(debug.contains("REDACTED"));
     }
 }

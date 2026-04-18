@@ -79,14 +79,13 @@ fn published_challenge_vectors_verify_as_expected() {
         &fixture.challenge_response.payload,
         &signature,
     ));
-    match Signature::from_base64(&fixture.challenge_response.tampered_user_signature) {
-        Ok(tampered) => {
-            assert!(!verify_challenge_response(
-                &user_key,
-                &fixture.challenge_response.payload,
-                &tampered,
-            ));
-        }
-        Err(_) => {}
+    if let Ok(tampered) =
+        Signature::from_base64(&fixture.challenge_response.tampered_user_signature)
+    {
+        assert!(!verify_challenge_response(
+            &user_key,
+            &fixture.challenge_response.payload,
+            &tampered,
+        ));
     }
 }

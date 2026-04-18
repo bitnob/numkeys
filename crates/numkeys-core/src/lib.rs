@@ -16,6 +16,7 @@
 
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
+#![allow(clippy::uninlined_format_args)]
 
 pub mod attestation;
 pub mod generator;

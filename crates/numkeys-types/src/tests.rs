@@ -120,7 +120,7 @@ mod property_tests {
 
         #[test]
         fn test_proxy_number_local_format(cc in "[1-9][0-9]{0,2}", digits in "[0-9]{8,10}") {
-            let number = format!("+{}00{}", cc, digits);
+            let number = format!("+{cc}00{digits}");
             if let Ok(proxy) = ProxyNumber::new(&number) {
                 assert_eq!(proxy.as_str(), number);
                 assert!(proxy.as_str().contains("00"));

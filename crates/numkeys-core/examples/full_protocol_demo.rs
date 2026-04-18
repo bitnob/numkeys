@@ -1,5 +1,7 @@
 //! Full protocol demonstration.
 
+#![allow(clippy::uninlined_format_args)]
+
 use numkeys_core::{
     create_attestation, generate_proxy_number, parse_attestation, verify_attestation_with_key,
     ProxyGenerationInput,

@@ -5,7 +5,9 @@ use crate::attestation::jwt::encode_jwt;
 use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use hex;
-use numkeys_crypto::{create_binding_signature, generate_nonce, hash_phone_number_spec};
+use numkeys_crypto::{
+    create_binding_signature, generate_nonce, hash_phone_number_spec, BindingMessage,
+};
 use numkeys_types::{Attestation, NumKeysResult, PhoneNumber, PrivateKey, ProxyNumber, PublicKey};
 use uuid::Uuid;
 
@@ -58,16 +60,18 @@ impl<'a> AttestationBuilder<'a> {
         let phone_hash_str = hash_phone_number_spec(&self.phone_number);
 
         // Generate binding signature using the canonical binding fields.
-        let binding_proof_str = create_binding_signature(
-            &self.issuer_domain,
-            self.proxy_number.as_str(),
-            &phone_hash_str,
-            &self.user_pubkey.to_base64(),
-            nonce.as_str(),
+        let user_pubkey_b64 = self.user_pubkey.to_base64();
+        let binding_message = BindingMessage {
+            iss: &self.issuer_domain,
+            sub: self.proxy_number.as_str(),
+            phone_hash: &phone_hash_str,
+            user_pubkey: &user_pubkey_b64,
+            nonce: nonce.as_str(),
             iat,
-            &jti,
-            self.issuer_private_key,
-        )?;
+            jti: &jti,
+        };
+        let binding_proof_str =
+            create_binding_signature(&binding_message, self.issuer_private_key)?;
 
         // Parse hash from "sha256:..." format
         let hash_hex = phone_hash_str.strip_prefix("sha256:").ok_or_else(|| {

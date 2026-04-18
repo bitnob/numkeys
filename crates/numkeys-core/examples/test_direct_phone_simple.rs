@@ -1,5 +1,7 @@
 //! Simple test to verify direct phone number verification works.
 
+#![allow(clippy::uninlined_format_args)]
+
 use numkeys_crypto::hash_phone_number_spec;
 use numkeys_types::PhoneNumber;
 

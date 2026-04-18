@@ -69,6 +69,33 @@ Run tests:
 cargo test
 ```
 
+## Prebuilt Binaries
+
+Tagged releases publish prebuilt binaries for:
+
+- Linux (`x86_64-unknown-linux-gnu`)
+- macOS Intel (`x86_64-apple-darwin`)
+- macOS Apple Silicon (`aarch64-apple-darwin`)
+- Windows (`x86_64-pc-windows-msvc`)
+
+Each release asset includes:
+
+- `numkeys` (CLI)
+- `numkeys-node` (RPC node)
+- `issuer-node` (reference issuer)
+- `.sha256` checksum file
+
+To create a release:
+
+```bash
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+Then download assets from GitHub Releases:
+
+- `https://github.com/bitnob/numkeys/releases`
+
 Run the reference issuer:
 
 ```bash

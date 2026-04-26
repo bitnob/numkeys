@@ -1,6 +1,6 @@
 //! Attestation creation logic.
 
-use crate::attestation::claims::Claims;
+use crate::attestation::claims::{Claims, KeyBinding};
 use crate::attestation::jwt::encode_jwt;
 use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
@@ -19,6 +19,8 @@ pub struct AttestationBuilder<'a> {
     proxy_number: ProxyNumber,
     user_pubkey: PublicKey,
     generation_nonce: Option<String>,
+    notify_pubkey: Option<String>,
+    key_binding: Option<KeyBinding>,
 }
 
 impl<'a> AttestationBuilder<'a> {
@@ -37,12 +39,27 @@ impl<'a> AttestationBuilder<'a> {
             proxy_number,
             user_pubkey,
             generation_nonce: None,
+            notify_pubkey: None,
+            key_binding: None,
         }
     }
 
     /// Set the proxy-generation nonce to embed in the attestation.
     pub fn generation_nonce(mut self, nonce: String) -> Self {
         self.generation_nonce = Some(nonce);
+        self
+    }
+
+    /// Attach the dual-key (numkeys-protocol v1.3) cross-binding. Both
+    /// `notify_pubkey` and `key_binding` MUST be supplied together — the
+    /// JWT builder enforces all-or-nothing and refuses to mint a
+    /// half-bound attestation. Verification of the binding signatures is
+    /// performed by the wallet/relying party against the embedded claims;
+    /// the issuer's job here is just to faithfully stamp them into the JWT
+    /// so a downstream verifier sees an unforgeable, signed copy.
+    pub fn dual_key(mut self, notify_pubkey: String, key_binding: KeyBinding) -> Self {
+        self.notify_pubkey = Some(notify_pubkey);
+        self.key_binding = Some(key_binding);
         self
     }
 
@@ -111,11 +128,31 @@ impl<'a> AttestationBuilder<'a> {
 
     /// Build the attestation and encode as JWT.
     pub fn build_jwt(self) -> NumKeysResult<String> {
-        // Store reference to issuer key before consuming self
+        // Capture optional dual-key fields and the issuer key reference
+        // BEFORE `build()` consumes `self`. Both dual-key fields must be
+        // present together — the wallet enforces this client-side and the
+        // orchestrator enforces it again before calling, but we re-check
+        // here so a bug in any caller can never silently emit a
+        // half-bound JWT (which the wallet's downgrade defense would
+        // reject anyway, but failing closer to the source gives a
+        // clearer error).
         let issuer_key = self.issuer_private_key;
+        let notify_pubkey = self.notify_pubkey.clone();
+        let key_binding = self.key_binding.clone();
+        match (&notify_pubkey, &key_binding) {
+            (Some(_), None) | (None, Some(_)) => {
+                return Err(numkeys_types::NumKeysError::CryptoError(
+                    "dual-key: notify_pubkey and key_binding must both be present or both absent"
+                        .into(),
+                ));
+            }
+            _ => {}
+        }
         let attestation = self.build()?;
-
-        encode_jwt(&Claims::from_attestation(&attestation), issuer_key)
+        let mut claims = Claims::from_attestation(&attestation);
+        claims.notify_pubkey = notify_pubkey;
+        claims.key_binding = key_binding;
+        encode_jwt(&claims, issuer_key)
     }
 }
 

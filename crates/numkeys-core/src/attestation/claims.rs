@@ -4,6 +4,20 @@ use hex;
 use numkeys_types::{BindingProof, Nonce, PhoneHash, ProxyNumber, PublicKey};
 use serde::{Deserialize, Serialize};
 
+/// Cross-key binding signature pair (numkeys-protocol v1.3 dual-key).
+///
+/// The wallet computes both signatures under the user's two seeds:
+///   - `ed25519_sig`: Ed25519 signature by the user key over the
+///     domain-separated hash of the notify pubkey.
+///   - `schnorr_sig`: BIP-340 Schnorr signature by the notify (Nostr) key
+///     over the domain-separated hash of the user pubkey.
+/// Both fields are base64url-encoded raw signature bytes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KeyBinding {
+    pub ed25519_sig: String,
+    pub schnorr_sig: String,
+}
+
 /// JWT claims for NumKeys attestations.
 ///
 /// This matches the NumKeys Protocol specification for JWT attestations.
@@ -36,6 +50,17 @@ pub struct Claims {
 
     /// The proxy-generation nonce in lowercase hex.
     pub nonce: String,
+
+    /// Optional dual-key notify pubkey (BIP-340 x-only, base64url).
+    /// Present iff this is a dual-key (v1.3) attestation. When present,
+    /// `key_binding` MUST also be present (and vice versa) — verifiers
+    /// reject any half-bound JWT.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notify_pubkey: Option<String>,
+
+    /// Optional dual-key cross-binding signature pair. See `notify_pubkey`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key_binding: Option<KeyBinding>,
 }
 
 impl Claims {
@@ -93,7 +118,10 @@ impl Claims {
         })
     }
 
-    /// Create from numkeys-types Attestation.
+    /// Create from numkeys-types Attestation. Dual-key claims default to
+    /// `None` because the `Attestation` core type doesn't carry them;
+    /// `AttestationBuilder::build_jwt` injects them after this conversion
+    /// when the issuer was asked to mint a v1.3 dual-key attestation.
     pub fn from_attestation(attestation: &numkeys_types::Attestation) -> Self {
         Claims {
             sub: attestation.proxy_number.to_string(),
@@ -105,6 +133,8 @@ impl Claims {
             jti: attestation.jti.clone(),
             binding_proof: format!("sig:{}", attestation.binding_proof.to_base64()),
             nonce: attestation.nonce.to_string(),
+            notify_pubkey: None,
+            key_binding: None,
         }
     }
 }

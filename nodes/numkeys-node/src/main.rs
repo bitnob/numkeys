@@ -10,8 +10,8 @@ use axum::{
 };
 use chrono::Utc;
 use numkeys_core::{
-    attestation::AttestationBuilder, generate_proxy_number, verify_attestation,
-    verify_attestation_with_key, ProxyGenerationInput,
+    attestation::{AttestationBuilder, KeyBinding},
+    generate_proxy_number, verify_attestation, verify_attestation_with_key, ProxyGenerationInput,
 };
 use numkeys_crypto::{
     generate_hex_nonce, generate_keypair, keypair_from_private, verify_challenge_response,
@@ -83,6 +83,13 @@ struct IssueAttestationRequest {
     phone_number: String,
     user_pubkey: String,
     scope: String,
+    /// Optional dual-key (numkeys-protocol v1.3) cross-binding fields.
+    /// Both must be present together — the builder rejects half-bound
+    /// inputs. `notify_pubkey` is the BIP-340 x-only Nostr pubkey (base64url).
+    #[serde(default)]
+    notify_pubkey: Option<String>,
+    #[serde(default)]
+    key_binding: Option<KeyBinding>,
 }
 
 #[derive(Debug, Serialize)]
@@ -314,16 +321,31 @@ async fn issue_attestation(
         )
     })?;
 
-    let attestation = AttestationBuilder::new(
+    // Reject half-bound dual-key inputs at the HTTP boundary so we
+    // surface a clean 400 instead of a generic 500 from the builder.
+    match (&req.notify_pubkey, &req.key_binding) {
+        (Some(_), None) | (None, Some(_)) => {
+            return Err(error_response(
+                StatusCode::BAD_REQUEST,
+                "invalid_dual_key",
+                "notify_pubkey and key_binding must both be present or both absent",
+            ));
+        }
+        _ => {}
+    }
+
+    let mut builder = AttestationBuilder::new(
         issuer.domain.clone(),
         &issuer.keypair.private,
         phone_number,
         proxy_number.clone(),
         user_pubkey,
     )
-    .generation_nonce(generation_nonce)
-    .build_jwt()
-    .map_err(|e| {
+    .generation_nonce(generation_nonce);
+    if let (Some(npk), Some(kb)) = (req.notify_pubkey, req.key_binding) {
+        builder = builder.dual_key(npk, kb);
+    }
+    let attestation = builder.build_jwt().map_err(|e| {
         error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
             "attestation_failed",
